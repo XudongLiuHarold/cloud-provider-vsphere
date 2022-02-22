@@ -1,0 +1,25 @@
+suite: test daemonset
+templates:
+    - daemonset.yaml
+tests:
+    - it: should work
+      set:
+        annotations: {}
+        image: gcr.io/cloud-provider-vsphere/cpi/release/manager
+        tag: v1.22.2
+        pullPolicy: IfNotPresent
+        dnsPolicy: ClusterFirst
+        cmdline:
+          logging: 2
+          cloudConfig:
+            dir: "/etc/cloud"
+            file: "vsphere.conf"
+          additionalParams: {}
+        replicaCount: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 256m
+            memory: 128Mi

@@ -1,0 +1,6 @@
+.git
+.gitignore
+.helmignore
+
+# ignore the helm chart testing files
+charts/tests
