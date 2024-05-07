@@ -418,3 +418,34 @@ release-staging:
 	$(MAKE) BUILD_TYPE=release docker-push
 	$(MAKE) build-bins
 	$(MAKE) BUILD_TYPE=release ccm-bin-push
+
+################################################################################
+##                            KPROMO RELATED                                  ##
+################################################################################
+
+KPROMO_VER := v4.0.5
+KPROMO_BIN := kpromo
+KPROMO :=  $(abspath $(TOOLS_BIN_DIR)/$(KPROMO_BIN)-$(KPROMO_VER))
+# KPROMO_PKG may have to be changed if KPROMO_VER increases its major version.
+KPROMO_PKG := sigs.k8s.io/promo-tools/v4/cmd/kpromo
+
+
+.PHONY: promote-images
+promote-images: $(KPROMO)
+	$(KPROMO) pr --project cloud-pv-vsphere --tag $(RELEASE_TAG) --reviewers "$(IMAGE_REVIEWERS)" --fork $(USER_FORK) --image cloud-provider-vsphere
+
+.PHONY: $(KPROMO_BIN)
+$(KPROMO_BIN): $(KPROMO) ## Build a local copy of kpromo
+
+$(KPROMO):
+	GOBIN=$(TOOLS_BIN_DIR) $(GO_INSTALL) $(KPROMO_PKG) $(KPROMO_BIN) $(KPROMO_VER)
+
+
+RELEASE_ALIAS_TAG := $(PULL_BASE_REF)
+RELEASE_DIR := out
+RELEASE_NOTES_DIR := _releasenotes
+USER_FORK ?= $(shell git config --get remote.origin.url | cut -d/ -f4) # only works on https://github.com/<username>/cluster-api.git style URLs
+ifeq ($(USER_FORK),)
+USER_FORK := $(shell git config --get remote.origin.url | cut -d: -f2 | cut -d/ -f1) # for git@github.com:<username>/cluster-api.git style URLs
+endif
+IMAGE_REVIEWERS ?= $(shell ./hack/get-project-maintainers.sh)
